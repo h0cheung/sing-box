@@ -242,10 +242,10 @@ func castMetadata(metadata adapter.InboundContext) trafficontrol.Metadata {
 		addr = metadata.Destination.Addr
 	}
 	var domain string
-	if metadata.Domain != "" {
-		domain = metadata.Domain
-	} else {
+	if metadata.Destination.IsFqdn() {
 		domain = metadata.Destination.Fqdn
+	} else {
+		domain = metadata.Domain
 	}
 	var processPath string
 	if metadata.ProcessInfo != nil {
