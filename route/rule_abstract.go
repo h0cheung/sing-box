@@ -18,14 +18,33 @@ type abstractDefaultRule struct {
 	destinationIPCIDRItems  []RuleItem
 	destinationPortItems    []RuleItem
 	allItems                []RuleItem
-	ruleSetItem             RuleItem
+	ruleSetItems            []RuleItem
 	invert                  bool
 	outbound                string
+	skipResolve             bool
+	useIPRule               bool
 	ruleCount               int
 }
 
 func (r *abstractDefaultRule) Type() string {
 	return C.RuleTypeDefault
+}
+
+func (r *abstractDefaultRule) SkipResolve() bool {
+	return r.skipResolve
+}
+
+func (r *abstractDefaultRule) UseIPRule() bool {
+	if r.useIPRule {
+		return true
+	}
+	for _, rule := range r.ruleSetItems {
+		r, _ := rule.(*RuleSetItem)
+		if r.useIPRule {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *abstractDefaultRule) Start() error {
@@ -164,15 +183,30 @@ func (r *abstractDefaultRule) RuleCount() int {
 }
 
 type abstractLogicalRule struct {
-	rules     []adapter.HeadlessRule
-	mode      string
-	invert    bool
-	outbound  string
-	ruleCount int
+	rules       []adapter.HeadlessRule
+	mode        string
+	invert      bool
+	outbound    string
+	skipResolve bool
+	useIPRule   bool
+	ruleCount   int
 }
 
 func (r *abstractLogicalRule) Type() string {
 	return C.RuleTypeLogical
+}
+
+func (r *abstractLogicalRule) SkipResolve() bool {
+	return r.skipResolve
+}
+
+func (r *abstractLogicalRule) UseIPRule() bool {
+	for _, rule := range r.rules {
+		if rule.UseIPRule() {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *abstractLogicalRule) UpdateGeosite() error {
